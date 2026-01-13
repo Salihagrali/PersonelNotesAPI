@@ -1,14 +1,14 @@
 import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
-import './config/dynamodb.ts'
+import { userRoutes } from './routes/userRoutes.js'
 
 const app = new Hono()
+
+app.route('/users', userRoutes);
 
 app.get('/', (c) => {
   return c.text('Hello Hono!')
 })
-
-console.log("DynamoDB Client is ready.");
 
 serve({
   fetch: app.fetch,
