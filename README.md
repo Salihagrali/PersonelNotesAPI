@@ -37,8 +37,8 @@ curl -X GET "http://localhost:3000/users/bc00db7a-cf2d-41ff-93b3-0dcb8e8bbb37/no
 curl -X PUT http://localhost:3000/notes/cff771f3-a94d-47d8-98ee-6120efc60c8d \
   -H "Content-Type: application/json" \
   -d '{
-    "title": "Updated title",
-    "content": "Updated content"
+    "title": "Updated title testing",
+    "content": "Updated content testing"
   }'
 
 curl -X DELETE http://localhost:3000/notes/5a582a0e-ace5-470d-b043-27822e1bc3c8

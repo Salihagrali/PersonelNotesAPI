@@ -87,7 +87,7 @@ export const NoteRepository = {
     return (result.Items as Note[]) || [];
   },
 
-  updateContent: async (noteId: string, title: string, content: string): Promise<void> => {
+  updateContent: async (noteId: string, title: string, content: string): Promise<Note> => {
     // First we find the full keys because we have only the noteId.
     // In here we implement the reverse lookup with GSI.
     const lookupResult = await db.send(new QueryCommand({
@@ -106,7 +106,7 @@ export const NoteRepository = {
     const note = lookupResult.Items[0];
     const { PK, SK } = note; // We have the both PK and SK.
 
-    await db.send(new UpdateCommand({
+    const updateResult = await db.send(new UpdateCommand({
       TableName: TABLE_NAME,
       Key: { PK, SK },
       UpdateExpression: "SET title = :t, content = :c, updatedAt = :u",
@@ -117,7 +117,9 @@ export const NoteRepository = {
         ":c": content,
         ":u": new Date().toISOString(),
       },
+      ReturnValues: "ALL_NEW",
     }));
+    return updateResult.Attributes as Note;
   },
   
   delete: async (noteId: string): Promise<boolean> => {
