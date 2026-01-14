@@ -58,7 +58,6 @@ export const UserRepository = {
         ],
       }));
       
-      // Destructured object.
       return { id: userId, name, email, createdAt: timestamp };
 
     } catch (error: any) {
@@ -86,9 +85,9 @@ export const UserRepository = {
       IndexName: "GSI1",
       KeyConditionExpression: "GSI1PK = :email",
       ExpressionAttributeValues: { ":email": `EMAIL#${email}` },
-      // We already handled the email uniqueness. But we can't use GSI with GetComamnd.
-      // That's why we need to use QueryCommand which returns an array. With Limit : 1,
-      // We only get the first match.
+      // We already handled the email uniqueness. But we can't use GSI with GetCommand.
+      // That's why we need to use QueryCommand which returns an array. 
+      // With Limit : 1, we only get the first match.
       Limit: 1,
     }));
     // result.Items checks for undefined while result.Items[0] checks for an empty array.
