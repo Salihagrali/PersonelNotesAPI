@@ -62,9 +62,10 @@ export const NoteRepository = {
   findDueBefore: async (userId: string, date: string): Promise<Note[]> => {
     const result = await db.send(new QueryCommand({
       TableName: TABLE_NAME,
-      KeyConditionExpression: "PK = :pk AND SK < :dateLimit",
+      KeyConditionExpression: "PK = :pk AND SK BETWEEN :min AND :dateLimit",
       ExpressionAttributeValues: {
         ":pk": `USER#${userId}`,
+        ":min": "NOTE#", // Get anything that starts with NOTE# also lower bound
         // Date = deadline. We need to follow the ISO-861 for the dates. 
         // DynamoDB compares strings and ISO-861 strings preserve chronological order.
         ":dateLimit": `NOTE#${date}`,
@@ -76,10 +77,11 @@ export const NoteRepository = {
   findDueAfter: async (userId: string, date: string): Promise<Note[]> => {
     const result = await db.send(new QueryCommand({
       TableName: TABLE_NAME,
-      KeyConditionExpression: "PK = :pk AND SK > :dateLimit",
+      KeyConditionExpression: "PK = :pk AND SK BETWEEN :dateLimit AND :max",
       ExpressionAttributeValues: {
         ":pk": `USER#${userId}`,
         ":dateLimit": `NOTE#${date}`,
+        ":max": "NOTE#~", // ~ is one of the highest ASCII characters. 
       },
     }));
     return (result.Items as Note[]) || [];
