@@ -1,4 +1,3 @@
-import { STATUS_CODES } from "http";
 import { NoteRepository } from "../repositories/noteRepository.js";
 import { AppError } from "../utils/appError.js";
 

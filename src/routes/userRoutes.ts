@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { UserRepository } from "../repositories/userRepository.js";
+import { UserService } from "../services/userService.js";
 
 export const userRoutes = new Hono();
 
@@ -12,7 +12,7 @@ userRoutes.post("/", async (c) => {
   }
 
   try {
-    const user = await UserRepository.create(name, email);
+    const user = await UserService.createUser(name, email);
     return c.json(user, 201);
   } catch (error: any) {
     if(error.message === "Email already has been taken."){
@@ -24,22 +24,24 @@ userRoutes.post("/", async (c) => {
 
 // GET /users/:id - ID'ye göre user getir
 userRoutes.get("/:id", async (c) => {
-  const userId = c.req.param("id");
-  const user = await UserRepository.findById(userId);
-
-  if(!user){
-    return c.json({ error: "User not found" }, 404);
+  try{
+    const userId = c.req.param("id");
+    const user = await UserService.getUserById(userId);
+    
+    return c.json(user, 200);
+  }catch(err : any){
+    return c.json({error : err.message},404);
   }
-  return c.json(user, 200);
 });
 
 // GET /users/by-email/:email - Email'e göre user getir
 userRoutes.get("/by-email/:email", async (c) => {
-  const email = c.req.param("email");
-  const user = await UserRepository.findByEmail(email);
+  try{
+    const email = c.req.param("email");
+    const user = await UserService.getUserByEmail(email);
 
-  if(!user){
-    return c.json({error : "User not found "} ,404);
+    return c.json(user, 200);
+  }catch(err : any){
+    return c.json({error : err.message},404);
   }
-  return c.json(user,200);
 });
