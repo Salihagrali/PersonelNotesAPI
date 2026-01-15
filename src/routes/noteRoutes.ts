@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { NoteRepository } from "../repositories/noteRepository.js";
+import { NoteService } from "../services/noteService.js";
 
 export const noteRoutes = new Hono();
 
@@ -8,19 +8,18 @@ noteRoutes.post("/users/:userId/notes", async (c) => {
   const userId = c.req.param("userId");
   const { title, content, deadline } = await c.req.json();
 
-  if(!title || !deadline || !content) return c.json({error : "Missing fields !"},400);
   try {
-    const note = await NoteRepository.create(userId, title, content, deadline);
+    const note = await NoteService.createNote(userId, title, content, deadline);
     return c.json(note, 201);
   } catch (error: any) {
-    return c.json({ error: error.message }, 500);
+    return c.json({ error: error.message }, 400);
   }
 });
 
 // GET /users/:userId/notes - Bir user'ın tüm notlarını getir
 noteRoutes.get("/users/:userId/notes", async (c) => {
   const userId = c.req.param("userId");
-  const notes = await NoteRepository.findAllByUser(userId);
+  const notes = await NoteService.getAllNotes(userId);
   return c.json(notes, 200);
 });
 
@@ -29,7 +28,7 @@ noteRoutes.get("/users/:userId/notes/due-before/:date", async (c) => {
   const userId = c.req.param("userId");
   const date = c.req.param("date");
   
-  const notes = await NoteRepository.findDueBefore(userId, date);
+  const notes = await NoteService.getNotesDueBefore(userId, date);
   return c.json(notes, 200);
 });
 
@@ -38,16 +37,17 @@ noteRoutes.get("/users/:userId/notes/due-after/:date", async (c) => {
   const userId = c.req.param("userId");
   const date = c.req.param("date");
   
-  const notes = await NoteRepository.findDueAfter(userId, date);
+  const notes = await NoteService.getNotesDueAfter(userId, date);
   return c.json(notes, 200);
 });
 
 // PUT /notes/:id - Note güncelle
 noteRoutes.put("/notes/:id", async (c) => {
-  const noteId = c.req.param("id");
-  const { title, content } = await c.req.json();
   try{
-    const updatedNote = await NoteRepository.updateContent(noteId, title, content);
+    const noteId = c.req.param("id");
+    const { title, content } = await c.req.json();
+
+    const updatedNote = await NoteService.updateNote(noteId, title, content);
     return c.json(updatedNote, 200);
   } catch(err: any){
     return c.json({error : err.message},404);
@@ -57,7 +57,7 @@ noteRoutes.put("/notes/:id", async (c) => {
 // DELETE /notes/:id - Note sil
 noteRoutes.delete("/notes/:id", async (c) => {
   const noteId = c.req.param("id");
-  const success = await NoteRepository.delete(noteId);
+  const success = await NoteService.deleteNote(noteId);
   if (success) {
     return c.json({ message: "Note deleted successfully" }, 200);
   } else {
