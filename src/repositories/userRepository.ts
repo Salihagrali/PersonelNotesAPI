@@ -2,17 +2,11 @@ import { TransactWriteCommand,GetCommand,QueryCommand } from "@aws-sdk/lib-dynam
 import { db } from "../config/dynamodb.js";
 import { randomUUID } from "node:crypto";
 import dotenv from "dotenv";
+import type { User } from "../types/user.js";
 
 dotenv.config();
 
 const TABLE_NAME = process.env.TABLE_NAME;
-
-export interface User {
-  id : string;
-  email : string;
-  name : string;
-  createdAt : string;
-}
 
 export const UserRepository = {
   create: async (name: string, email: string): Promise<User> => {

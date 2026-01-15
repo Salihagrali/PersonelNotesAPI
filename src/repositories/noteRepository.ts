@@ -2,19 +2,11 @@ import { PutCommand, QueryCommand, DeleteCommand, GetCommand, UpdateCommand } fr
 import { db } from "../config/dynamodb.js";
 import { randomUUID } from "node:crypto";
 import dotenv from "dotenv";
+import type { Note } from "../types/note.js";
 
 dotenv.config();
 
 const TABLE_NAME = process.env.TABLE_NAME;
-
-export interface Note {
-  id: string;
-  userId: string;
-  title: string;
-  content: string;
-  deadline: string;
-  createdAt: string;
-}
 
 export const NoteRepository = {
   
