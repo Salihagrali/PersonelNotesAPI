@@ -5,4 +5,5 @@ export interface Note {
   content: string;
   deadline: string;
   createdAt: string;
+  updatedAt : string;
 }

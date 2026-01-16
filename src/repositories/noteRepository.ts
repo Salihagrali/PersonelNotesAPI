@@ -1,5 +1,4 @@
-import { PutCommand, QueryCommand, DeleteCommand, GetCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
-import { db } from "../config/dynamodb.js";
+import { NoteEntity } from "../entities/noteEntity.js";
 import { randomUUID } from "node:crypto";
 import dotenv from "dotenv";
 import type { Note } from "../types/note.js";
@@ -7,6 +6,8 @@ import type { Note } from "../types/note.js";
 dotenv.config();
 
 const TABLE_NAME = process.env.TABLE_NAME;
+const MIN = "\u0000";
+const MAX = "\uFFFF";
 
 export const NoteRepository = {
   
@@ -15,129 +16,76 @@ export const NoteRepository = {
     const noteId = randomUUID();
     const now = new Date().toISOString();
 
-    const noteItem = {
-      PK: `USER#${userId}`,
-      SK: `NOTE#${deadline}#${noteId}`, // Composite sort key pattern deadline for sorting noteId for uniqueness
-      GSI2PK: `NOTE#${noteId}`, // Needed for reverse lookup access pattern. 
-      GSI2SK: `USER#${userId}`,
-      Type: "note",
-      id: noteId,
+    const noteItem = await NoteEntity.create({
+      id : noteId,
       userId,
       title,
       content,
       deadline,
       createdAt: now,
-      updatedAt: now
-    };
+      updatedAt: now,
+    }).go();
 
-    await db.send(new PutCommand({
-      TableName: TABLE_NAME,
-      Item: noteItem
-    }));
-
-    return { id: noteId, userId, title, content, deadline, createdAt: now };
+    return noteItem.data as Note;
   },
 
   findAllByUser: async (userId: string): Promise<Note[]> => {
-    const result = await db.send(new QueryCommand({
-      TableName: TABLE_NAME,
-      KeyConditionExpression: "PK = :pk AND begins_with(SK, :skPrefix)",
-      ExpressionAttributeValues: {
-        ":pk": `USER#${userId}`,
-        ":skPrefix": "NOTE#", // Get anything that starts with NOTE#
-      },
-    }));
-
-    return (result.Items as Note[]) || [];
+    // RAW SDK (OLD WAY):
+    // We had to manually write the query logic and know the SK structure.
+    // Example: KeyConditionExpression: "PK = :pk AND begins_with(SK, :skPrefix)"
+    
+    // ELECTRODB (NEW WAY):
+    // We just call .byUser({ userId }).
+    // ElectroDB automatically generates the "PK = ..." and "begins_with..." logic 
+    // based on the Entity definition we created.
+    const result = await NoteEntity.query.byUser({ userId }).go();
+    return result.data as Note[];
   },
 
   findDueBefore: async (userId: string, date: string): Promise<Note[]> => {
-    const result = await db.send(new QueryCommand({
-      TableName: TABLE_NAME,
-      KeyConditionExpression: "PK = :pk AND SK BETWEEN :min AND :dateLimit",
-      ExpressionAttributeValues: {
-        ":pk": `USER#${userId}`,
-        ":min": "NOTE#", // Get anything that starts with NOTE# also lower bound
-        // Date = deadline. We need to follow the ISO-861 for the dates. 
-        // DynamoDB compares strings and ISO-861 strings preserve chronological order.
-        ":dateLimit": `NOTE#${date}`,
-      },
-    }));
-    return (result.Items as Note[]) || [];
+    //No need for BETWEEN anymore. ElectroDB handles the sort key comparison automatically.
+    const result = await NoteEntity.query.byUser({ userId }).lt({ "deadline": date, "id" : MAX}).go()
+    return result.data as Note[];
   },
 
   findDueAfter: async (userId: string, date: string): Promise<Note[]> => {
-    const result = await db.send(new QueryCommand({
-      TableName: TABLE_NAME,
-      KeyConditionExpression: "PK = :pk AND SK BETWEEN :dateLimit AND :max",
-      ExpressionAttributeValues: {
-        ":pk": `USER#${userId}`,
-        ":dateLimit": `NOTE#${date}`,
-        ":max": "NOTE#~", // ~ is one of the highest ASCII characters. 
-      },
-    }));
-    return (result.Items as Note[]) || [];
+    const result = await NoteEntity.query.byUser({ userId }).gt({ "deadline": date, "id" : MIN}).go()
+    return result.data as Note[];
   },
 
   updateContent: async (noteId: string, title: string, content: string): Promise<Note> => {
-    // First we find the full keys because we have only the noteId.
-    // In here we implement the reverse lookup with GSI.
-    const lookupResult = await db.send(new QueryCommand({
-      TableName: TABLE_NAME,
-      IndexName: "GSI2",
-      KeyConditionExpression: "GSI2PK = :noteId",
-      ExpressionAttributeValues: {
-        ":noteId": `NOTE#${noteId}`,
-      },
-      Limit: 1,
-    }));
+    // Reverse lookup using GSI2.
+    const lookupResult = await NoteEntity.query.byId({ id: noteId }).go();
 
-    if (!lookupResult.Items || lookupResult.Items.length === 0) {
+    if(lookupResult.data.length === 0 || !lookupResult.data){
       throw new Error(`Note with id ${noteId} not found`);
     }
-    const note = lookupResult.Items[0];
-    const { PK, SK } = note; // We have the both PK and SK.
+    // Since it is a composite sort key, we have to take the deadline as well even if 
+    // we are not going to change it. This is different than the old SDK way. With SDK 
+    // we directly found the SK from the lookup item. 
+    const { userId, deadline, id } = lookupResult.data[0];
+    
+    const result = await NoteEntity.patch({ userId, deadline,id})
+      .set({ title, content ,updatedAt: new Date().toISOString()})
+      // Couldn't find the equivalent of ConditionExpression: "attribute_exists(PK)"
+      // That's why I am checking with id attribute.
+      .where((attr,op) => op.exists(attr.id) )
+      .go({response : "all_new"});
 
-    const updateResult = await db.send(new UpdateCommand({
-      TableName: TABLE_NAME,
-      Key: { PK, SK },
-      UpdateExpression: "SET title = :t, content = :c, updatedAt = :u",
-      // To avoid race condition with delete() method.
-      ConditionExpression: "attribute_exists(PK)",
-      ExpressionAttributeValues: {
-        ":t": title,
-        ":c": content,
-        ":u": new Date().toISOString(),
-      },
-      ReturnValues: "ALL_NEW",
-    }));
-    return updateResult.Attributes as Note;
+    return result.data as Note;
   },
   
   delete: async (noteId: string): Promise<boolean> => {
     // Same logic with the updateContent method
-    const lookupResult = await db.send(new QueryCommand({
-      TableName: TABLE_NAME,
-      IndexName: "GSI2",
-      KeyConditionExpression: "GSI2PK = :noteId",
-      ExpressionAttributeValues: {
-        ":noteId": `NOTE#${noteId}`,
-      },
-      Limit: 1,
-    }));
+    const lookupResult = await NoteEntity.query.byId({ id: noteId }).go();
 
-    if (!lookupResult.Items || lookupResult.Items.length === 0) {
+    if (!lookupResult.data || lookupResult.data.length === 0) {
       return false;
-    }
+    } 
+    const { userId, deadline, id } = lookupResult.data[0];
 
-    const note = lookupResult.Items[0];
-    const { PK, SK } = note; // We have the both PK and SK.
-
-    await db.send(new DeleteCommand({
-      TableName: TABLE_NAME,
-      Key: { PK, SK },
-    }));
-
+    await NoteEntity.delete({ userId, deadline, id }).go();
+    
     return true;
   }
 };

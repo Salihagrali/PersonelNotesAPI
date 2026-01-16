@@ -11,6 +11,7 @@
     "@aws-sdk/lib-dynamodb": "^3.967.0",
     "@hono/node-server": "^1.19.8",
     "dotenv": "^17.2.3",
+    "electrodb": "^3.5.3",
     "hono": "^4.11.4"
   },
   "devDependencies": {

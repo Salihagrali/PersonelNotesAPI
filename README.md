@@ -20,12 +20,12 @@ For user endpoints:
 ```
 For note endpoints:
 ```
-curl -X POST http://localhost:3000/users/bc00db7a-cf2d-41ff-93b3-0dcb8e8bbb37/notes \
+curl -X POST http://localhost:3000/users/840e52b7-ab84-4051-88ed-2405cc915b7d/notes \
   -H "Content-Type: application/json" \
   -d '{
     "title": "Previous final exam questions",
     "content": "Already done this i guess",
-    "deadline": "2025-01-14T21:37:12.345Z"
+    "deadline": "2026-01-21T21:37:12.345Z"
   }'
 
 curl -X GET http://localhost:3000/users/bc00db7a-cf2d-41ff-93b3-0dcb8e8bbb37/notes

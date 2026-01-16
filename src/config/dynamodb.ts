@@ -21,7 +21,7 @@ const client = new DynamoDBClient({
   credentials: {
     accessKeyId,
     secretAccessKey,
-  },
+  }
 });
 
 export const db = DynamoDBDocumentClient.from(client);
