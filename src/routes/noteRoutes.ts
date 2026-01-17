@@ -64,3 +64,41 @@ noteRoutes.delete("/notes/:id", async (c) => {
     return c.json({ error: "Note not found" }, 404);
   }
 });
+
+// POST /notes/:noteId/share - Notu paylaş
+noteRoutes.post("/notes/:noteId/share", async (c) => {
+  const noteId = c.req.param("noteId");
+  const { ownerId, sharedWith } = await c.req.json();
+
+  try {
+    const sharedNote = await NoteService.shareNote(ownerId, noteId, sharedWith);
+    return c.json(sharedNote, 201);
+  } catch (error: any) {
+    return c.json({ error: error.message }, 400);
+  }
+});
+
+// GET /notes/:userId/shared
+noteRoutes.get("/users/:userId/shared", async (c) => {
+  const userId = c.req.param("userId");
+
+  try {
+    const sharedNotes = await NoteService.getSharedWithMe(userId);
+    return c.json(sharedNotes, 200);
+  }catch(err: any){
+    return c.json({error : err.message},404);
+  }
+});
+
+
+// GET /notes/:noteId/accessList
+noteRoutes.get("/notes/:noteId/accessList", async (c) => {
+  const noteId = c.req.param("noteId");
+
+  try {
+    const users = await NoteService.getNoteAccessList(noteId);
+    return c.json(users, 200);
+  } catch (error: any) {
+    return c.json({ error: error.message }, 400);
+  }
+});

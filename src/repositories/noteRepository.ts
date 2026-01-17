@@ -1,11 +1,7 @@
 import { NoteEntity } from "../entities/noteEntity.js";
 import { randomUUID } from "node:crypto";
-import dotenv from "dotenv";
 import type { Note } from "../types/note.js";
 
-dotenv.config();
-
-const TABLE_NAME = process.env.TABLE_NAME;
 const MIN = "\u0000";
 const MAX = "\uFFFF";
 

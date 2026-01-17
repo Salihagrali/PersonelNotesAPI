@@ -1,4 +1,6 @@
+import { get } from "http";
 import { NoteRepository } from "../repositories/noteRepository.js";
+import { SharedNoteRepository } from "../repositories/sharedNoteRepository.js";
 import { AppError } from "../utils/appError.js";
 
 export const NoteService = {
@@ -41,5 +43,17 @@ export const NoteService = {
     //  throw new AppError("Note not found", 404);
     //}
     return success;
+  },
+
+  shareNote : async (ownerId : string, noteId : string, sharedWith : string) => {
+    return await SharedNoteRepository.share(ownerId, noteId, sharedWith);
+  },
+
+  getSharedWithMe : async (userId : string) => {
+    return await SharedNoteRepository.getSharedWithMe(userId);
+  },
+
+  getNoteAccessList : async (noteId : string) => {
+    return await SharedNoteRepository.getNoteAccessList(noteId);
   }
 }

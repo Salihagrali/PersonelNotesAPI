@@ -1,15 +1,8 @@
-import { TransactWriteCommand,GetCommand,QueryCommand } from "@aws-sdk/lib-dynamodb";
-import { db } from "../config/dynamodb.js";
 import { randomUUID } from "node:crypto";
-import dotenv from "dotenv";
 import type { User } from "../types/user.js";
 import { Service } from "electrodb";
 import { UserEntity } from "../entities/userEntity.js";
 import { ConstraintEntity } from "../entities/constraintEntity.js";
-
-dotenv.config();
-
-const TABLE_NAME = process.env.TABLE_NAME;
 
 const NotesService = new Service({
   user : UserEntity,

@@ -45,3 +45,18 @@ curl -X DELETE http://localhost:3000/notes/5a582a0e-ace5-470d-b043-27822e1bc3c8
 
 ```
 
+For share note endpoints :
+
+```
+curl -X POST http://localhost:3000/notes/4fbb739d-05ef-4f10-9911-dc6a48a3a19d/share \
+     -H "Content-Type: application/json" \
+     -d '{
+           "ownerId": "840e52b7-ab84-4051-88ed-2405cc915b7d",
+           "sharedWith": "b039e777-3ee5-4b40-bdc0-5ef071430c50"
+         }'
+
+curl -X GET http://localhost:3000/users/b039e777-3ee5-4b40-bdc0-5ef071430c50/shared
+
+curl -X GET http://localhost:3000/notes/e5a7fa36-aa62-429d-ba98-f470c473cd27/accessList
+
+```
