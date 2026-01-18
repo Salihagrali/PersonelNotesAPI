@@ -69,5 +69,9 @@ export const NoteService = {
       throw new AppError("Tag is required",400);
     }
     return await NoteRepository.findByTag(userId, tag);
+  },
+
+  getNoteByVersion : async (noteId : string, version : number) => {
+    return await NoteRepository.findNoteByVersion(noteId, version);
   }
 }

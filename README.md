@@ -73,3 +73,16 @@ curl -X POST http://localhost:3000/notes/8cf8383d-425a-4437-bcc7-bf226b520524/ta
 curl -X GET "http://localhost:3000/notes/tags/urgent?userId=840e52b7-ab84-4051-88ed-2405cc915b7d"
 
 ```
+
+For version endpoints:
+```
+curl -X PUT http://localhost:3000/notes/8cf8383d-425a-4437-bcc7-bf226b520524 \
+     -H "Content-Type: application/json" \
+     -d '{
+           "title": "Testing the version functionality",
+           "content": "Version should be updated"
+         }'
+            http://localhost:3000/notes/<NOTE_ID>/<VERSION_ID>
+curl -X GET http://localhost:3000/notes/8cf8383d-425a-4437-bcc7-bf226b520524/1
+    
+```

@@ -135,4 +135,22 @@ noteRoutes.get("/notes/tags/:tagName", async (c) => {
   }
 });
 
+// GET /notes/:noteId/:version
+noteRoutes.get("/notes/:noteId/:version", async (c) => {
+  const noteId = c.req.param("noteId");
+  // String -> number by parseInt
+  const version = parseInt(c.req.param("version"));
+  // Checks if it is a number or not
+  if(isNaN(version)){
+    return c.json({error : "Version must be a number"},400);
+  }
+
+  try {
+    const noteVersion = await NoteService.getNoteByVersion(noteId, version);
+    return c.json(noteVersion, 200);
+
+  }catch(err : any){
+    return c.json({error : err.message},404);
+  }
+});
   

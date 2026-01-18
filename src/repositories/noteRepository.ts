@@ -3,14 +3,16 @@ import { randomUUID } from "node:crypto";
 import type { Note } from "../types/note.js";
 import { Service } from "electrodb";
 import { TagEntity } from "../entities/tagEntity.js";
+import { NoteVersionEntity } from "../entities/noteVersionEntity.js";
 
 const MIN = "\u0000";
 const MAX = "\uFFFF";
 
 //ElectroDB Service
-const TagService = new Service({
+const NotesService = new Service({
   note: NoteEntity,
-  tag : TagEntity
+  tag : TagEntity,
+  noteVersion : NoteVersionEntity
 })
 
 export const NoteRepository = {
@@ -57,7 +59,7 @@ export const NoteRepository = {
     return result.data as Note[];
   },
 
-  updateContent: async (noteId: string, title: string, content: string): Promise<Note> => {
+  updateContent: async (noteId: string, title: string, content: string) => {
     // Reverse lookup using GSI2.
     const lookupResult = await NoteEntity.query.byId({ id: noteId }).go();
 
@@ -67,16 +69,50 @@ export const NoteRepository = {
     // Since it is a composite sort key, we have to take the deadline as well even if 
     // we are not going to change it. This is different than the old SDK way. With SDK 
     // we directly found the SK from the lookup item. 
-    const { userId, deadline, id } = lookupResult.data[0];
-    
-    const result = await NoteEntity.patch({ userId, deadline,id})
-      .set({ title, content ,updatedAt: new Date().toISOString()})
-      // Couldn't find the equivalent of ConditionExpression: "attribute_exists(PK)"
-      // That's why I am checking with id attribute.
-      .where((attr,op) => op.exists(attr.id) )
-      .go({response : "all_new"});
+    const currentData = lookupResult.data[0];
 
-    return result.data as Note;
+    //For old notes that doesn't have version attr.
+    const currentVersion = currentData.version || 1;
+    
+    try{
+      await NotesService.transaction.write(({ note, noteVersion }) => [
+            // Store old note
+            noteVersion.create({
+                noteId: noteId,
+                version: currentVersion,
+                title: currentData.title,
+                content: currentData.content,
+                deadline: currentData.deadline,
+                tags: currentData.tags || [],
+                archivedAt: new Date().toISOString(),
+            }).commit(),
+
+            // Update the note 
+            note.patch({ 
+                userId: currentData.userId, 
+                deadline: currentData.deadline, 
+                id: noteId 
+            })
+            .set({ 
+                title, 
+                content, 
+                updatedAt: new Date().toISOString(),
+                version: currentVersion + 1
+            })
+            // Couldn't find the equivalent of ConditionExpression: "attribute_exists(PK)"
+            // That's why I am checking with id attribute.
+            .where((attr,op) => op.exists(attr.id))
+            .commit(),
+        ]).go();
+
+        return { 
+            message: "Note updated and versioned", 
+            id: noteId, 
+            newVersion: currentVersion + 1 
+        };
+    }catch(err : any){
+      throw new Error(`Transaction failed: ${err.message}`)
+    }
   },
   
   delete: async (noteId: string): Promise<boolean> => {
@@ -104,7 +140,7 @@ export const NoteRepository = {
     }
 
     try {
-      await TagService.transaction.write(({ note, tag }) => [
+      await NotesService.transaction.write(({ note, tag }) => [
         // Update the Note "Tags" attribute
         note.patch({ 
             userId, 
@@ -147,5 +183,14 @@ export const NoteRepository = {
     const { data } = await NoteEntity.get(keys).go();
 
     return data;
+  },
+
+  findNoteByVersion : async (noteId : string, version : number) => {
+    const result = await NoteVersionEntity.query.byNote({noteId, version}).go();
+
+    if(!result.data){
+      throw new Error ("Note version not found");
+    }
+    return result.data;
   }
 };

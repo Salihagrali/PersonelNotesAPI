@@ -25,6 +25,11 @@ export const NoteEntity = new Entity(
         type : "set",
         items : "string",
         default : []
+      },
+      version: { 
+        type: "number", 
+        required: true, 
+        default: 1 
       }
     },
     indexes: {
