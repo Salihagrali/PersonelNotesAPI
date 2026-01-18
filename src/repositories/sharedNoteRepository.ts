@@ -1,10 +1,5 @@
-import { Service } from "electrodb";
 import { NoteEntity } from "../entities/noteEntity.js";
 import { SharedNoteEntity } from "../entities/sharedNoteEntity.js";
-
-export const NoteService = new Service({
-  note: NoteEntity,
-});
 
 export const SharedNoteRepository ={
   share : async (ownerId : string, noteId : string, sharedWith : string) => {
@@ -33,7 +28,7 @@ export const SharedNoteRepository ={
     if(sharedNotes.data.length === 0){
       return [];
     }
-
+    // All the PK and SKs has to be in the keys otherwise won't work.
     const noteKeys = sharedNotes.data.map((share) => ({
       userId: share.sharedBy,
       id: share.noteId,

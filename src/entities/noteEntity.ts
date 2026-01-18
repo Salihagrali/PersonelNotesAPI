@@ -21,6 +21,11 @@ export const NoteEntity = new Entity(
       deadline: { type: "string", required: true },
       createdAt: { type: "string" },
       updatedAt: { type: "string" },
+      tags : {
+        type : "set",
+        items : "string",
+        default : []
+      }
     },
     indexes: {
       byUser: {

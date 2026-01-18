@@ -4,6 +4,7 @@ import { Service } from "electrodb";
 import { UserEntity } from "../entities/userEntity.js";
 import { ConstraintEntity } from "../entities/constraintEntity.js";
 
+//ElectroDB Service
 const NotesService = new Service({
   user : UserEntity,
   emailLock : ConstraintEntity

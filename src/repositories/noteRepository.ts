@@ -1,9 +1,17 @@
 import { NoteEntity } from "../entities/noteEntity.js";
 import { randomUUID } from "node:crypto";
 import type { Note } from "../types/note.js";
+import { Service } from "electrodb";
+import { TagEntity } from "../entities/tagEntity.js";
 
 const MIN = "\u0000";
 const MAX = "\uFFFF";
+
+//ElectroDB Service
+const TagService = new Service({
+  note: NoteEntity,
+  tag : TagEntity
+})
 
 export const NoteRepository = {
   
@@ -83,5 +91,61 @@ export const NoteRepository = {
     await NoteEntity.delete({ userId, deadline, id }).go();
     
     return true;
+  },
+
+  addTag : async (noteId : string, userId : string, tag : string) => {
+    const normalTag = tag.toLowerCase();
+
+    const note = await NoteEntity.query.byId({ id: noteId }).go();
+    const fetchedResults = note.data[0];
+
+    if(!note){
+      throw new Error(`Note with id ${noteId} not found`);
+    }
+
+    try {
+      await TagService.transaction.write(({ note, tag }) => [
+        // Update the Note "Tags" attribute
+        note.patch({ 
+            userId, 
+            deadline: fetchedResults.deadline, 
+            id: noteId 
+        })
+        .add({ tags: [normalTag] }).commit(),
+
+        // Create the Tag Entity for search.
+        tag.create({
+          userId,
+          noteId,
+          tag: normalTag,
+          noteDeadline: fetchedResults.deadline,
+        }).commit()
+      ]).go();
+    }catch(err : any){
+      throw err;
+    }
+  },
+
+  findByTag : async (userId : string, tag : string) => {
+    const normalTag = tag.toLowerCase();
+    // Don't need to specify the noteId here for the SK.
+    // Only PK and the TAG SK is enough.
+    // Example: PK: USER#<userId> , SK: TAG#<tag>
+    // Since noteId is missing, ElectroDB aytomatically generates this:
+    // PK = 'USER#<userId>' AND SK BEGINS_WITH 'TAG#<tag>'
+    const tagRecords = await TagEntity.query
+      .byTag({ userId, tag : normalTag }).go();
+
+    if(tagRecords.data.length === 0) return [];
+
+    const keys = tagRecords.data.map(item => ({
+      userId : item.userId,
+      id : item.noteId,
+      deadline : item.noteDeadline
+    }));
+    // BatchGet with ElectroDB. Getting all the notes. 
+    const { data } = await NoteEntity.get(keys).go();
+
+    return data;
   }
 };

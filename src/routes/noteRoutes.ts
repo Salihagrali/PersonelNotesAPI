@@ -102,3 +102,37 @@ noteRoutes.get("/notes/:noteId/accessList", async (c) => {
     return c.json({ error: error.message }, 400);
   }
 });
+
+// POST /notes/:noteId/tags
+noteRoutes.post("/notes/:noteId/tags", async (c) => {
+  const noteId = c.req.param("noteId");
+  const { userId, tag } = await c.req.json();
+  if(!tag){
+    return c.json({error : "Tag is required"},400);
+  }
+  try {
+    await NoteService.addTagToNote(noteId, userId, tag);
+    return c.json({ message: "Tag added successfully" }, 201);
+  } catch (error: any) {
+    return c.json({ error: error.message }, 400);
+  }
+});
+
+// GET /notes/tags/:tagName
+noteRoutes.get("/notes/tags/:tagName", async (c) => {
+  const tagName = c.req.param("tagName");
+  const userId = c.req.query("userId");
+  
+  if(!userId){
+    return c.json({error : "userId is required"},400);
+  }
+
+  try {
+    const notes = await NoteService.getNotesByTag(userId, tagName);
+    return c.json(notes, 200);
+  } catch (error: any) {
+    return c.json({ error: error.message }, 400);
+  }
+});
+
+  

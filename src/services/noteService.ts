@@ -1,4 +1,3 @@
-import { get } from "http";
 import { NoteRepository } from "../repositories/noteRepository.js";
 import { SharedNoteRepository } from "../repositories/sharedNoteRepository.js";
 import { AppError } from "../utils/appError.js";
@@ -55,5 +54,20 @@ export const NoteService = {
 
   getNoteAccessList : async (noteId : string) => {
     return await SharedNoteRepository.getNoteAccessList(noteId);
+  },
+
+  addTagToNote : async (noteId : string, userId : string, tag : string) => {
+    if(!tag || tag.length < 3){
+      throw new AppError("Tag must be at least 3 characters long",400);
+    }
+
+    return await NoteRepository.addTag(noteId, userId, tag);
+  },
+
+  getNotesByTag : async (userId : string, tag : string) => {
+    if(!tag){
+      throw new AppError("Tag is required",400);
+    }
+    return await NoteRepository.findByTag(userId, tag);
   }
 }

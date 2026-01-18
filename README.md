@@ -60,3 +60,16 @@ curl -X GET http://localhost:3000/users/b039e777-3ee5-4b40-bdc0-5ef071430c50/sha
 curl -X GET http://localhost:3000/notes/e5a7fa36-aa62-429d-ba98-f470c473cd27/accessList
 
 ```
+
+For tag endpoints:
+```
+curl -X POST http://localhost:3000/notes/8cf8383d-425a-4437-bcc7-bf226b520524/tags \
+     -H "Content-Type: application/json" \
+     -d '{
+           "tag": "urgent",
+           "userId": "840e52b7-ab84-4051-88ed-2405cc915b7d"
+         }'
+
+curl -X GET "http://localhost:3000/notes/tags/urgent?userId=840e52b7-ab84-4051-88ed-2405cc915b7d"
+
+```
