@@ -25,10 +25,15 @@ Purpose: Reverse lookup for notes and shared notes.
 ### The reasoning behind the structure
 -> I decided to reuse PK, SK and GSIs to store different types of data to avoid
 extra cost and space for the other entities. GSI2 is being used by Note and SharedNote for this reason.
+
 -> By adding the 'deadline' to the Note's SK (NOTE#<deadline>#<id>), DynamoDB automatically keeps the notes sorted by deadline. While getting the due-after and due-before notes, I used fixed MIN and MAX values to only check the deadlines.
+
 -> I used EMAIL#<email> as a PK to enforce for email uniqueness. I didn't want to query all the pk: USER#<user_id> sk:PROFILE just to check for an email. Instead, I created items with pk: EMAIL#<email> and sk: UNIQUE_EMAILS.
+
 -> I didn't want to store old versions of notes in one item in a JSON. That would be costly and at one point in the future it'll exceed the JSON limit. That's why I store snapshots of notes in separate items using pk: NOTE_HISTORY#<note_id> and sk: VER#<version>.
+
 -> sk: SHARED<note_id> pattern is necessary for the many-to-many relation between Users and SharedNotes. The GSI2 index helps us to see who has access to a specific note.
+
 -> Notes have tags as attributes in them. Additionallyi I am utilizing sk: TAG#<tag>NOTE#<id> to use in getting many notes with the specified tag. Basically a batch operation.
 
 ## 2. Entity Relationships
