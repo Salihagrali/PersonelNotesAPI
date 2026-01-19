@@ -65,11 +65,13 @@ curl -X GET http://localhost:3000/users/by-email/api@test.com
 ```
 
 **Get User by ID**
+
 bc00db7a-cf2d-41ff-93b3-0dcb8e8bbb37 = userID
 ```bash
 curl -X GET http://localhost:3000/users/bc00db7a-cf2d-41ff-93b3-0dcb8e8bbb37
 ```
 **Create a Note**
+
 840e52b7-ab84-4051-88ed-2405cc915b7d = userId
 ```bash
 curl -X POST http://localhost:3000/users/840e52b7-ab84-4051-88ed-2405cc915b7d/notes \
@@ -82,18 +84,21 @@ curl -X POST http://localhost:3000/users/840e52b7-ab84-4051-88ed-2405cc915b7d/no
 ```
 
 **Get All Notes for a User**
+
 bc00db7a-cf2d-41ff-93b3-0dcb8e8bbb37 = userId
 ```bash
 curl -X GET http://localhost:3000/users/bc00db7a-cf2d-41ff-93b3-0dcb8e8bbb37/notes
 ```
 
 **Get Notes Due BEFORE Date**
+
 bc00db7a-cf2d-41ff-93b3-0dcb8e8bbb37 = userId
 2026-01-20T00%3A00%3A00Z = date
 ```bash
 curl -X GET "http://localhost:3000/users/bc00db7a-cf2d-41ff-93b3-0dcb8e8bbb37/notes/due-before/2026-01-20T00%3A00%3A00Z"
 ```
 **Get Notes Due AFTER Date** 
+
 bc00db7a-cf2d-41ff-93b3-0dcb8e8bbb37 = userId
 2026-01-10T00%3A00%3A00Z = date
 ```bash
@@ -101,6 +106,7 @@ curl -X GET "http://localhost:3000/users/bc00db7a-cf2d-41ff-93b3-0dcb8e8bbb37/no
 ```
   
 **Update Note**
+
 cff771f3-a94d-47d8-98ee-6120efc60c8d = noteId
 ```bash
 curl -X PUT http://localhost:3000/notes/cff771f3-a94d-47d8-98ee-6120efc60c8d \
@@ -112,12 +118,14 @@ curl -X PUT http://localhost:3000/notes/cff771f3-a94d-47d8-98ee-6120efc60c8d \
 ```
 
 **Delete Note**
+
 5a582a0e-ace5-470d-b043-27822e1bc3c8 = noteId
 ```bash
 curl -X DELETE http://localhost:3000/notes/5a582a0e-ace5-470d-b043-27822e1bc3c8
 ```
 
 **Share a Note**
+
 4fbb739d-05ef-4f10-9911-dc6a48a3a19d = noteId
 ```bash
 curl -X POST http://localhost:3000/notes/4fbb739d-05ef-4f10-9911-dc6a48a3a19d/share \
@@ -129,18 +137,21 @@ curl -X POST http://localhost:3000/notes/4fbb739d-05ef-4f10-9911-dc6a48a3a19d/sh
 ```
 
 **Get Shared With Me**
+
 b039e777-3ee5-4b40-bdc0-5ef071430c50 = userId
 ```bash
 curl -X GET http://localhost:3000/users/b039e777-3ee5-4b40-bdc0-5ef071430c50/shared
 ```
 
 **Get Note Access List**
+
 e5a7fa36-aa62-429d-ba98-f470c473cd27 = noteId
 ```bash
 curl -X GET http://localhost:3000/notes/e5a7fa36-aa62-429d-ba98-f470c473cd27/accessList
 ```
 
 **Add Tag to Note**
+
 8cf8383d-425a-4437-bcc7-bf226b520524 = noteId
 ```bash
 curl -X POST http://localhost:3000/notes/8cf8383d-425a-4437-bcc7-bf226b520524/tags \
@@ -151,12 +162,14 @@ curl -X POST http://localhost:3000/notes/8cf8383d-425a-4437-bcc7-bf226b520524/ta
   }'
 ```
 **Get Notes by Tag**
+
 urgent = tagName
 ```bash
 curl -X GET "http://localhost:3000/notes/tags/urgent?userId=840e52b7-ab84-4051-88ed-2405cc915b7d"
 ```
 
 **Get Note Version**
+
 8cf8383d-425a-4437-bcc7-bf226b520524 = noteId
 1 = versionId
 ```bash
