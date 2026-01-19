@@ -79,6 +79,7 @@ extra cost and space for the other entities. GSI2 is being used by Note and Shar
 
   Get notes due-after
   ```
+  ```
   SELECT * FROM table
   WHERE PK = 'USER#<userId>'
   AND SK > 'NOTE#<future-date>#MIN'
@@ -246,11 +247,12 @@ DynamoDB does not support unique constraints on non-primary attributes. To enfor
 ## 5. Design Decisions & Trade-offs
   1. FindByTag
     At first, I decided to retrieve all notes belonging to a user and then filter them by tags. At that moment, it seemed like a good idea. However, after considering the read requirements, I switched to using BatchGetItem.
+    
+    While this approach does not noticeably affect the application’s performance right now, the number of required read operations increases as more notes are persisted in the database. For example, if a user had 10,000 notes, the systemwould need to read all of them just to apply the tag filter. This would make the application visibly slow andinefficient.
 
-    While this approach does not noticeably affect the application’s performance right now, the number of required read   operations increases as more notes are persisted in the database. For example, if a user had 10,000 notes, the system would need to read all of them just to apply the tag filter. This would make the application visibly slow and inefficient.
   
   2. FindNoteByVersion
-    By storing the notes history as new items might increase the storage cost. But other option was storing the previous notes as JSONs inside the current Note. After learning about the JSON size limit of the DynamoDB, and it wasn't recommended that much so I decided to create a new entity for note history..
+    By storing the notes history as new items might increase the storage cost. But other option was storing the previous notes as JSONs inside the current Note. After learning about the JSON size limit of the DynamoDB, and it wasn't recommended that much so I decided to create a new entity for note history.
 
     I could also store just the diffs/deltas (similar to Git). But storage is cheap compared to computing the diffs.
   
