@@ -15,7 +15,7 @@ A high-performance, serverless-ready REST API built with **Hono**, **ElectroDB**
 
 * **Node.js** (v20)
 * **AWS Credentials** (configured via `.env` or AWS CLI)
-* **DynamoDB Table** (Created in AWS or running locally)
+* **DynamoDB Table** (Created in AWS)
 
 ## Installation & Setup
 
